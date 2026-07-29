@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Resultados de tráfico — Fedetranscarga</title>
+  <style>
+    :root {
+      --page: #050914;
+      --frame: #0a1222;
+      --frame-2: #0d172a;
+      --paper: #f8fafc;
+      --paper-2: #eef2f8;
+      --ink: #101828;
+      --text: #f8fafc;
+      --muted: #91a0b8;
+      --muted-dark: #667085;
+      --line: rgba(255,255,255,.10);
+      --violet: #6d4aff;
+      --violet-2: #9b7cff;
+      --cyan: #00b8d4;
+      --cyan-2: #5de0f0;
+      --green: #18c99a;
+      --amber: #f6b93b;
+      --shadow: 0 34px 100px rgba(0,0,0,.38);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(109,74,255,.22), transparent 26%),
+        radial-gradient(circle at 90% 18%, rgba(0,184,212,.14), transparent 24%),
+        linear-gradient(180deg, #070c18, var(--page));
+    }
+
+    button { font: inherit; }
+
+    .slide {
+      min-height: 100vh;
+      padding: clamp(22px, 3vw, 48px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      scroll-snap-align: start;
+      position: relative;
+    }
+
+    .frame {
+      width: min(1500px, 100%);
+      aspect-ratio: 16 / 9;
+      min-height: 740px;
+      padding: clamp(34px, 3.2vw, 56px);
+      border-radius: 34px;
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at 85% 8%, rgba(0,184,212,.09), transparent 30%),
+        radial-gradient(circle at 10% 100%, rgba(109,74,255,.12), transparent 36%),
+        linear-gradient(145deg, rgba(13,23,42,.98), rgba(7,13,25,.99));
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .34;
+      background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, #000, transparent 76%);
+    }
+
+    .header,
+    .body,
+    .footer { position: relative; z-index: 2; }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--cyan-2);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+      box-shadow: 0 0 16px rgba(0,184,212,.5);
+    }
+
+    h1, h2, p { margin: 0; }
+    h1, h2 {
+      letter-spacing: -.045em;
+      line-height: .98;
+      font-weight: 820;
+    }
+    h1 { font-size: clamp(54px, 5.6vw, 92px); }
+    h2 { font-size: clamp(38px, 4.2vw, 66px); }
+
+    .period,
+    .badge {
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.055);
+      color: #c5cfde;
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      backdrop-filter: blur(18px);
+    }
+
+    .badge.real { color: #65f3d0; border-color: rgba(24,201,154,.30); background: rgba(24,201,154,.10); }
+    .badge.estimated { color: #ffd574; border-color: rgba(246,185,59,.30); background: rgba(246,185,59,.10); }
+    .badge.live { color: #71e7f4; border-color: rgba(0,184,212,.30); background: rgba(0,184,212,.10); }
+
+    .body { flex: 1; min-height: 0; }
+
+    .hero-layout {
+      height: 100%;
+      display: grid;
+      grid-template-columns: .78fr 1.22fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8px 4px;
+      min-width: 0;
+    }
+
+    .hero-number {
+      font-size: clamp(86px, 8.4vw, 142px);
+      line-height: .78;
+      letter-spacing: -.078em;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffffff 12%, #b8a6ff 54%, #64e7f2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      white-space: nowrap;
+    }
+
+    .hero-label {
+      margin-top: 28px;
+      color: #d4dbea;
+      font-size: clamp(20px, 2vw, 29px);
+      font-weight: 680;
+      letter-spacing: -.02em;
+    }
+
+    .hero-meta {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .meta-chip {
+      padding: 16px 15px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 17px;
+      background: rgba(255,255,255,.045);
+      min-width: 0;
+    }
+    .meta-chip small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 6px;
+    }
+    .meta-chip b {
+      display: block;
+      font-size: clamp(22px, 2.1vw, 34px);
+      letter-spacing: -.04em;
+    }
+
+    .chart-card {
+      background: linear-gradient(180deg, #ffffff, var(--paper));
+      color: var(--ink);
+      border: 1px solid rgba(255,255,255,.90);
+      border-radius: 27px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.24);
+      padding: 25px 26px 18px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chart-card.large { padding: 28px 30px 18px; }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 4px;
+    }
+    .chart-head strong {
+      display: block;
+      color: var(--ink);
+      font-size: clamp(18px, 1.45vw, 24px);
+      letter-spacing: -.025em;
+    }
+    .chart-head span {
+      display: block;
+      color: var(--muted-dark);
+      font-size: 12px;
+      font-weight: 650;
+      margin-top: 4px;
+    }
+
+    .chart-highlight {
+      text-align: right;
+      color: var(--ink);
+      min-width: max-content;
+    }
+    .chart-highlight b {
+      display: block;
+      font-size: clamp(27px, 2.6vw, 42px);
+      line-height: .92;
+      letter-spacing: -.055em;
+    }
+    .chart-highlight small {
+      color: var(--muted-dark);
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .svg-chart {
+      flex: 1;
+      min-height: 320px;
+      position: relative;
+    }
+    .svg-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+    .chart-line {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+    }
+    .chart-area { opacity: 0; }
+    .chart-point { opacity: 0; transform-box: fill-box; transform-origin: center; }
+    .slide.is-active .chart-line { animation: draw-line 1.15s cubic-bezier(.3,.7,.2,1) forwards; }
+    .slide.is-active .chart-area { animation: reveal-area .9s .25s ease forwards; }
+    .slide.is-active .chart-point { animation: pop-point .38s .72s ease forwards; }
+
+    @keyframes draw-line { to { stroke-dashoffset: 0; } }
+    @keyframes reveal-area { to { opacity: 1; } }
+    @keyframes pop-point { from { opacity:0; transform:scale(.3); } to { opacity:1; transform:scale(1); } }
+
+    .full-chart-layout {
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 18px;
+    }
+
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric-card {
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      border-radius: 19px;
+      padding: 17px 19px;
+      min-width: 0;
+    }
+    .metric-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 7px;
+    }
+    .metric-card b {
+      display: block;
+      font-size: clamp(26px, 2.6vw, 42px);
+      line-height: 1;
+      letter-spacing: -.048em;
+    }
+    .metric-card em {
+      display: block;
+      margin-top: 6px;
+      color: #b7c1d2;
+      font-style: normal;
+      font-size: 12px;
+    }
+
+    .split-layout {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.28fr .72fr;
+      gap: 22px;
+      min-height: 0;
+    }
+
+    .ranking {
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 13px;
+    }
+
+    .rank-card {
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(145deg, rgba(255,255,255,.058), rgba(255,255,255,.025));
+      border-radius: 21px;
+      padding: 20px 21px;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: center;
+      gap: 12px;
+      min-height: 0;
+    }
+    .rank-number {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: rgba(109,74,255,.16);
+      color: #b8a9ff;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .rank-card:nth-child(2) .rank-number { background: rgba(0,184,212,.13); color: #6fe9f4; }
+    .rank-card:nth-child(3) .rank-number { background: rgba(24,201,154,.12); color: #6af0cb; }
+    .rank-card small {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .rank-card b {
+      display: block;
+      margin-top: 5px;
+      font-size: clamp(26px, 2.5vw, 42px);
+      letter-spacing: -.05em;
+      line-height: 1;
+    }
+    .rank-card span {
+      color: #c5cedc;
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    .resource-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .technical-layout {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 22px;
+      min-height: 0;
+    }
+
+    .domain-panel {
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at 84% 15%, rgba(0,184,212,.14), transparent 26%),
+        linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .domain-panel small {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .13em;
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .domain-value {
+      margin-top: 10px;
+      font-size: clamp(82px, 8.5vw, 142px);
+      line-height: .88;
+      font-weight: 900;
+      letter-spacing: -.072em;
+      color: #fff;
+    }
+    .domain-name {
+      margin-top: 14px;
+      color: #cbd5e1;
+      font-size: clamp(18px, 1.65vw, 25px);
+      font-weight: 650;
+    }
+
+    .share-track {
+      margin-top: 36px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+      display: flex;
+    }
+    .share-main { width: 84.4%; background: linear-gradient(90deg, var(--violet), var(--cyan)); }
+    .share-www { width: 15.6%; background: rgba(255,255,255,.28); }
+    .share-labels {
+      margin-top: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tech-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .tech-card {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.027));
+      padding: 23px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 0;
+    }
+    .tech-card small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+    .tech-card b {
+      font-size: clamp(34px, 3.6vw, 58px);
+      line-height: .95;
+      letter-spacing: -.055em;
+      margin-top: 18px;
+    }
+    .tech-card span {
+      color: #c4cedd;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .status-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #68f0ca !important;
+      font-weight: 800;
+    }
+    .status-live::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 18px rgba(24,201,154,.7);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #71819a;
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .03em;
+    }
+
+    .top-actions {
+      position: fixed;
+      top: 15px;
+      right: 18px;
+      z-index: 30;
+      display: flex;
+      gap: 8px;
+    }
+    .action {
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 12px;
+      background: rgba(6,11,22,.78);
+      color: #f8fafc;
+      padding: 10px 13px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      backdrop-filter: blur(18px);
+      transition: transform .2s ease, background .2s ease;
+    }
+    .action:hover { transform: translateY(-1px); background: rgba(19,29,50,.92); }
+
+    .nav {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 25;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      background: rgba(6,11,22,.72);
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .nav button {
+      width: 9px;
+      height: 9px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.24);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .nav button.active {
+      background: var(--cyan);
+      transform: scale(1.25);
+      box-shadow: 0 0 15px rgba(0,184,212,.72);
+    }
+
+    @media (max-width: 1080px) {
+      html { scroll-snap-type: none; }
+      .slide { align-items: flex-start; }
+      .frame { aspect-ratio: auto; min-height: 920px; }
+      .hero-layout,
+      .split-layout,
+      .technical-layout { grid-template-columns: 1fr; }
+      .hero-number { font-size: 108px; }
+      .chart-card { min-height: 480px; }
+      .ranking { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; }
+      .rank-card { grid-template-columns: 38px 1fr; }
+      .nav { display: none; }
+    }
+
+    @media (max-width: 720px) {
+      .slide { padding: 12px; }
+      .frame { border-radius: 24px; padding: 28px 22px; min-height: 980px; }
+      .header { flex-direction: column; }
+      .hero-meta,
+      .metrics-strip,
+      .resource-facts,
+      .ranking,
+      .tech-cards { grid-template-columns: 1fr; }
+      .chart-card { padding: 20px 14px 10px; }
+      .svg-chart { min-height: 360px; }
+      .top-actions { right: 10px; top: 10px; }
+      .action { padding: 8px 10px; font-size: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .chart-line { stroke-dashoffset: 0; }
+      .chart-area, .chart-point { opacity: 1; }
+      .slide.is-active .chart-line,
+      .slide.is-active .chart-area,
+      .slide.is-active .chart-point { animation: none; }
+    }
+
+    @media print {
+      @page { size: landscape; margin: 0; }
+      body { background: #fff; }
+      .slide { min-height: 100vh; padding: 0; page-break-after: always; }
+      .frame { width: 100%; height: 100vh; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
+      .top-actions, .nav { display: none !important; }
+      .chart-line { stroke-dashoffset: 0 !important; }
+      .chart-area, .chart-point { opacity: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-actions" aria-label="Acciones de presentación">
+    <button class="action" id="fullscreenBtn">Pantalla completa</button>
+    <button class="action" id="printBtn">PDF</button>
+  </div>
+  <nav class="nav" id="nav" aria-label="Navegación de diapositivas"></nav>
+
+  <section class="slide" id="slide-1">
+    <div class="frame">
+      <header class="header">
+        <div>
+          <div class="kicker">Tráfico real</div>
+          <h1>Resultados digitales</h1>
+        </div>
+        <div class="period">22–29 julio 2026</div>
+      </header>
+
+      <main class="body hero-layout">
+        <div class="hero-copy">
+          <div class="hero-number">29.160</div>
+          <div class="hero-label">solicitudes registradas en 7 días</div>
+          <div class="hero-meta">
+            <div class="meta-chip"><small>Ancho de banda</small><b>3,16 GB</b></div>
+            <div class="meta-chip"><small>Errores 5xx</small><b>0</b></div>
+            <div class="meta-chip"><small>Dominios</small><b>2</b></div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <div>
+              <strong>Intensidad promedio por hora</strong>
+              <span>Comparación por ventana de análisis</span>
+            </div>
+            <div class="chart-highlight"><b>483</b><small>última hora</small></div>
+          </div>
+          <div class="svg-chart" id="trafficChart"></div>
+        </div>
+      </main>
+
+      <footer class="footer"><span>Fuente: hPanel Analytics</span><span>01 / 05</span></footer>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-2">
+    <div class="frame">
+      <header class="header">
+        <div>
+          <div class="kicker">Volumen acumulado</div>
+          <h2>Proyección de 8 semanas</h2>
+        </div>
+        <div class="badge estimated">Estimado</div>
+      </header>
+
+      <main class="body full-chart-layout">
+        <div class="chart-card large">
+          <div class="chart-head">
+            <div>
+              <strong>Solicitudes acumuladas</strong>
+              <span>Base semanal: 29.160 solicitudes</span>
+            </div>
+            <div class="chart-highlight"><b>233.280</b><small>semana 8</small></div>
+          </div>
+          <div class="svg-chart" id="projectionChart"></div>
+        </div>
+
+        <div class="metrics-strip">
+          <div class="metric-card"><small>Ancho de banda estimado</small><b>25,3 GB</b><em>8 semanas</em></div>
+          <div class="metric-card"><small>Promedio semanal</small><b>29.160</b><em>solicitudes</em></div>
+          <div class="metric-card"><small>Periodo</small><b>8</b><em>semanas · 3 jun–29 jul</em></div>
+        </div>
+      </main>
+
+      <footer class="footer"><span>Proyección matemática con base en la última semana real</span><span>02 / 05</span></footer>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-3">
+    <div class="frame">
+      <header class="header">
+        <div>
+          <div class="kicker">Alcance geográfico</div>
+          <h2>Países con mayor actividad</h2>
+        </div>
+        <div class="badge real">7 días</div>
+      </header>
+
+      <main class="body split-layout">
+        <div class="chart-card large">
+          <div class="chart-head">
+            <div>
+              <strong>Curva de concentración por país</strong>
+              <span>Top 10 por número de solicitudes</span>
+            </div>
+            <div class="chart-highlight"><b>13.237</b><small>EE. UU.</small></div>
+          </div>
+          <div class="svg-chart" id="countriesChart"></div>
+        </div>
+
+        <aside class="ranking">
+          <div class="rank-card">
+            <div class="rank-number">01</div>
+            <div><small>Estados Unidos</small><b>13.237</b><span>solicitudes</span></div>
+          </div>
+          <div class="rank-card">
+            <div class="rank-number">02</div>
+            <div><small>Colombia</small><b>4.384</b><span>solicitudes</span></div>
+          </div>
+          <div class="rank-card">
+            <div class="rank-number">03</div>
+            <div><small>Francia</small><b>3.012</b><span>solicitudes</span></div>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="footer"><span>Ranking real de solicitudes por origen</span><span>03 / 05</span></footer>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-4">
+    <div class="frame">
+      <header class="header">
+        <div>
+          <div class="kicker">Demanda de contenido</div>
+          <h2>Recursos más solicitados</h2>
+        </div>
+        <div class="badge real">7 días</div>
+      </header>
+
+      <main class="body full-chart-layout">
+        <div class="chart-card large">
+          <div class="chart-head">
+            <div>
+              <strong>Curva de demanda del Top 10</strong>
+              <span>Solicitudes por página o recurso</span>
+            </div>
+            <div class="chart-highlight"><b>2.192</b><small>página de inicio</small></div>
+          </div>
+          <div class="svg-chart" id="resourcesChart"></div>
+        </div>
+
+        <div class="resource-facts">
+          <div class="metric-card"><small>Página principal</small><b>2.192</b><em>solicitudes</em></div>
+          <div class="metric-card"><small>robots.txt</small><b>1.021</b><em>solicitudes</em></div>
+          <div class="metric-card"><small>Dos primeros recursos</small><b>3.213</b><em>solicitudes combinadas</em></div>
+        </div>
+      </main>
+
+      <footer class="footer"><span>Top de rutas y activos web</span><span>04 / 05</span></footer>
+    </div>
+  </section>
+
+  <section class="slide" id="slide-5">
+    <div class="frame">
+      <header class="header">
+        <div>
+          <div class="kicker">Indicadores técnicos</div>
+          <h2>Infraestructura y medición</h2>
+        </div>
+        <div class="badge live">GA4 activo</div>
+      </header>
+
+      <main class="body technical-layout">
+        <div class="domain-panel">
+          <small>Tráfico del dominio principal</small>
+          <div class="domain-value">84,4%</div>
+          <div class="domain-name">fedetranscarga.org · 24.621 solicitudes</div>
+          <div class="share-track" aria-label="Distribución por dominio">
+            <div class="share-main"></div>
+            <div class="share-www"></div>
+          </div>
+          <div class="share-labels">
+            <span>fedetranscarga.org · 84,4%</span>
+            <span>www · 15,6%</span>
+          </div>
+        </div>
+
+        <div class="tech-cards">
+          <div class="tech-card"><small>Ancho de banda</small><b>3,16 GB</b><span>últimos 7 días</span></div>
+          <div class="tech-card"><small>Errores de servidor</small><b style="color:#67efca">0</b><span>respuestas 5xx</span></div>
+          <div class="tech-card"><small>Google Analytics 4</small><b>Activo</b><span class="status-live">Verificado</span></div>
+          <div class="tech-card"><small>Inicio de medición</small><b>29 jul</b><span>2026</span></div>
+        </div>
+      </main>
+
+      <footer class="footer"><span>Fedetranscarga.org · Panel ejecutivo</span><span>05 / 05</span></footer>
+    </div>
+  </section>
+
+  <script>
+    const NS = 'http://www.w3.org/2000/svg';
+
+    function el(name, attrs = {}, text = '') {
+      const node = document.createElementNS(NS, name);
+      Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+      if (text !== '') node.textContent = text;
+      return node;
+    }
+
+    function formatAxis(value) {
+      if (value >= 1000000) return `${(value / 1000000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} M`;
+      if (value >= 1000) return `${(value / 1000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} mil`;
+      return value.toLocaleString('es-CO');
+    }
+
+    function formatFull(value) {
+      return value.toLocaleString('es-CO');
+    }
+
+    function niceMax(value) {
+      if (value <= 0) return 1;
+      const exponent = Math.floor(Math.log10(value));
+      const fraction = value / Math.pow(10, exponent);
+      const niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+      return niceFraction * Math.pow(10, exponent);
+    }
+
+    function smoothPath(points) {
+      if (!points.length) return '';
+      if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+      let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i - 1] || points[i];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[i + 2] || p2;
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+      }
+      return d;
+    }
+
+    function addValueBadge(svg, point, label, color, chartTop) {
+      const group = el('g', { class: 'chart-point' });
+      const width = Math.max(66, label.length * 8.2 + 20);
+      const height = 31;
+      const placeBelow = point.y - height - 16 < chartTop;
+      const y = placeBelow ? point.y + 16 : point.y - height - 16;
+      const x = Math.max(5, Math.min(995 - width, point.x - width / 2));
+      group.appendChild(el('rect', {
+        x, y, width, height, rx: 10,
+        fill: '#101828', opacity: .94
+      }));
+      group.appendChild(el('text', {
+        x: x + width / 2,
+        y: y + 20,
+        'text-anchor': 'middle',
+        fill: '#ffffff',
+        'font-size': 13,
+        'font-weight': 800
+      }, label));
+      svg.appendChild(group);
+    }
+
+    function makeLineChart(id, config) {
+      const host = document.getElementById(id);
+      if (!host) return;
+      host.innerHTML = '';
+
+      const W = 1000;
+      const H = 430;
+      const M = { l: 74, r: 34, t: 42, b: 72 };
+      const plotW = W - M.l - M.r;
+      const plotH = H - M.t - M.b;
+      const maxValue = config.max || niceMax(Math.max(...config.values) * 1.06);
+      const minValue = config.min || 0;
+      const range = Math.max(1, maxValue - minValue);
+      const xStep = config.values.length > 1 ? plotW / (config.values.length - 1) : 0;
+
+      const svg = el('svg', {
+        viewBox: `0 0 ${W} ${H}`,
+        role: 'img',
+        'aria-label': config.aria || 'Gráfica de línea'
+      });
+
+      const uid = `${id}-${Math.random().toString(36).slice(2, 8)}`;
+      const defs = el('defs');
+
+      const areaGradient = el('linearGradient', { id: `${uid}-area`, x1: 0, y1: 0, x2: 0, y2: 1 });
+      areaGradient.appendChild(el('stop', { offset: '0%', 'stop-color': config.color1, 'stop-opacity': .30 }));
+      areaGradient.appendChild(el('stop', { offset: '100%', 'stop-color': config.color2 || config.color1, 'stop-opacity': .015 }));
+      defs.appendChild(areaGradient);
+
+      const lineGradient = el('linearGradient', { id: `${uid}-line`, x1: 0, y1: 0, x2: 1, y2: 0 });
+      lineGradient.appendChild(el('stop', { offset: '0%', 'stop-color': config.color1 }));
+      lineGradient.appendChild(el('stop', { offset: '100%', 'stop-color': config.color2 || config.color1 }));
+      defs.appendChild(lineGradient);
+
+      const glow = el('filter', { id: `${uid}-glow`, x: '-30%', y: '-30%', width: '160%', height: '160%' });
+      glow.appendChild(el('feGaussianBlur', { stdDeviation: 4, result: 'blur' }));
+      const merge = el('feMerge');
+      merge.appendChild(el('feMergeNode', { in: 'blur' }));
+      merge.appendChild(el('feMergeNode', { in: 'SourceGraphic' }));
+      glow.appendChild(merge);
+      defs.appendChild(glow);
+      svg.appendChild(defs);
+
+      const yTicks = config.yTicks || 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const ratio = i / yTicks;
+        const y = M.t + plotH - ratio * plotH;
+        const value = minValue + ratio * range;
+        svg.appendChild(el('line', {
+          x1: M.l, y1: y, x2: W - M.r, y2: y,
+          stroke: '#d9e0ea', 'stroke-width': 1
+        }));
+        svg.appendChild(el('text', {
+          x: M.l - 14, y: y + 4,
+          'text-anchor': 'end',
+          fill: '#7a8799',
+          'font-size': 12,
+          'font-weight': 650
+        }, formatAxis(Math.round(value))));
+      }
+
+      const points = config.values.map((value, index) => ({
+        x: M.l + index * xStep,
+        y: M.t + plotH - ((value - minValue) / range) * plotH,
+        value,
+        label: config.labels[index]
+      }));
+
+      const baseY = M.t + plotH;
+      const lineD = smoothPath(points);
+      const areaD = `${lineD} L ${points[points.length - 1].x.toFixed(2)} ${baseY} L ${points[0].x.toFixed(2)} ${baseY} Z`;
+
+      svg.appendChild(el('path', {
+        d: areaD,
+        class: 'chart-area',
+        fill: `url(#${uid}-area)`
+      }));
+
+      svg.appendChild(el('path', {
+        d: lineD,
+        class: 'chart-line',
+        pathLength: 1,
+        fill: 'none',
+        stroke: `url(#${uid}-line)`,
+        'stroke-width': config.strokeWidth || 4.5,
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
+        filter: `url(#${uid}-glow)`,
+        'vector-effect': 'non-scaling-stroke'
+      }));
+
+      points.forEach((point, index) => {
+        const labelEvery = config.labelEvery || 1;
+        const showX = index % labelEvery === 0 || index === points.length - 1;
+        if (showX) {
+          const text = el('text', {
+            x: point.x,
+            y: H - 28,
+            'text-anchor': 'middle',
+            fill: '#667085',
+            'font-size': config.xFontSize || 12,
+            'font-weight': 700
+          }, config.labels[index]);
+          svg.appendChild(text);
+        }
+
+        const pointGroup = el('g', { class: 'chart-point' });
+        const haloRadius = index === points.length - 1 && config.highlightLast !== false ? 12 : 0;
+        if (haloRadius) {
+          pointGroup.appendChild(el('circle', {
+            cx: point.x, cy: point.y, r: haloRadius,
+            fill: config.color2 || config.color1,
+            opacity: .18
+          }));
+        }
+        pointGroup.appendChild(el('circle', {
+          cx: point.x, cy: point.y,
+          r: index === points.length - 1 && config.highlightLast !== false ? 6.5 : 4.8,
+          fill: '#ffffff',
+          stroke: index === points.length - 1 ? (config.color2 || config.color1) : config.color1,
+          'stroke-width': 3.2
+        }));
+        const title = el('title', {}, `${point.label}: ${formatFull(point.value)}`);
+        pointGroup.appendChild(title);
+        svg.appendChild(pointGroup);
+      });
+
+      (config.badgeIndexes || []).forEach(index => {
+        if (!points[index]) return;
+        addValueBadge(svg, points[index], formatFull(points[index].value), config.color1, M.t);
+      });
+
+      host.appendChild(svg);
+    }
+
+    makeLineChart('trafficChart', {
+      labels: ['Prom. 7 días', 'Prom. 24 h', 'Prom. 6 h', 'Última hora'],
+      values: [174, 209, 398, 483],
+      color1: '#6d4aff',
+      color2: '#00b8d4',
+      max: 600,
+      badgeIndexes: [0, 3],
+      aria: 'Intensidad promedio de solicitudes por hora: 174 en 7 días, 209 en 24 horas, 398 en 6 horas y 483 en la última hora.'
+    });
+
+    makeLineChart('projectionChart', {
+      labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+      values: [29160, 58320, 87480, 116640, 145800, 174960, 204120, 233280],
+      color1: '#f6b93b',
+      color2: '#6d4aff',
+      max: 250000,
+      badgeIndexes: [0, 7],
+      aria: 'Proyección acumulada de solicitudes durante 8 semanas, desde 29.160 hasta 233.280.'
+    });
+
+    makeLineChart('countriesChart', {
+      labels: ['EE. UU.', 'Colombia', 'Francia', 'R. Unido', 'N. Zelanda', 'Rusia', 'Singapur', 'China', 'Corea S.', 'Alemania'],
+      values: [13237, 4384, 3012, 2505, 992, 897, 552, 402, 294, 287],
+      color1: '#6d4aff',
+      color2: '#00b8d4',
+      max: 15000,
+      badgeIndexes: [0, 1, 2],
+      xFontSize: 11,
+      aria: 'Top 10 países por solicitudes en los últimos 7 días.'
+    });
+
+    makeLineChart('resourcesChart', {
+      labels: ['Inicio', 'robots.txt', 'Video', 'Audio 2', 'Audio 1', 'Hero', 'Página ext.', 'Traffic', 'Evento', 'Imagen'],
+      values: [2192, 1021, 157, 142, 133, 67, 67, 63, 52, 52],
+      color1: '#00b8d4',
+      color2: '#6d4aff',
+      max: 2500,
+      badgeIndexes: [0, 1],
+      xFontSize: 11,
+      aria: 'Top 10 páginas y recursos por solicitudes en los últimos 7 días.'
+    });
+
+    const slides = [...document.querySelectorAll('.slide')];
+    const nav = document.getElementById('nav');
+
+    slides.forEach((slide, index) => {
+      const button = document.createElement('button');
+      button.setAttribute('aria-label', `Ir a la diapositiva ${index + 1}`);
+      button.addEventListener('click', () => slide.scrollIntoView({ behavior: 'smooth' }));
+      nav.appendChild(button);
+    });
+
+    const dots = [...nav.children];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const index = slides.indexOf(entry.target);
+        slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+      });
+    }, { threshold: .58 });
+
+    slides.forEach(slide => observer.observe(slide));
+    slides[0].classList.add('is-active');
+    dots[0]?.classList.add('active');
+
+    document.addEventListener('keydown', (event) => {
+      const current = Math.max(0, dots.findIndex(dot => dot.classList.contains('active')));
+      if (['ArrowDown', 'ArrowRight', 'PageDown'].includes(event.key)) {
+        event.preventDefault();
+        slides[Math.min(current + 1, slides.length - 1)].scrollIntoView({ behavior: 'smooth' });
+      }
+      if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        slides[Math.max(current - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (_) {}
+    });
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+  </script>
+</body>
+</html>
